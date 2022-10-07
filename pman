@@ -1,0 +1,12 @@
+#!/bin/sh
+
+SRCDIR="$1"
+INTR="$2"
+
+mkdir -p "${SRCDIR}/logs"
+
+until  $INTR "${SRCDIR}/src" >>"${SRCDIR}/logs/now" 2>>"${SRCDIR}/logs/now"
+do
+	printf "\\n;;; [%s CRASHED. RESTARTING.]\\n\\n" "${SRCDIR}" >> "${SRCDIR}/logs/now"
+	sleep 1
+done
