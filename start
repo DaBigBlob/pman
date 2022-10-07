@@ -1,17 +1,18 @@
 #!/bin/sh
 
-SRCDIR="/home/hman/anon"
-INTR="/home/hman/.homebrew/bin/node"
-
-pkill -9 -f "${SRCDIR}"
-printf "[!] killed all %s processes\\n" "${SRCDIR}"
+SRCDIR="/Users/hriddhiman/Code/shell-man/test"
 
 mkdir -p "${SRCDIR}/logs"
+
+pkill -9 -f "${SRCDIR}"
+printf "[!] Killed all %s processes\\n" "${SRCDIR}"
+
 printf "\\n;;; [NEXT LOG START]\\n\\n" >> "${SRCDIR}/logs/old"
 cat "${SRCDIR}/logs/now" >> "${SRCDIR}/logs/old"
 printf "" > "${SRCDIR}/logs/now"
 
-"${SRCDIR}/./pman" "$SRCDIR" "$INTR" >/dev/null 2>&1 &
-printf "[!] triggered %s's process manager\\n" "${SRCDIR}"
+"${SRCDIR}/./pman" "$SRCDIR" >/dev/null 2>&1 &
+printf "[!] Triggered %s's process manager\\n" "${SRCDIR}"
 
-printf "[.] Done.\\n"
+printf "\\n[.] Tailing %s...\\n<ctrl+c to exit but keep %s running>\\n" "${SRCDIR}/logs/now" "${SRCDIR}"
+tail -f "${SRCDIR}/logs/now"

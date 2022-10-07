@@ -1,10 +1,12 @@
 #!/bin/sh
 
-SRCDIR="/home/hman/anon"
+SRCDIR="./test"
 
 pkill -9 -f "${SRCDIR}"
 printf "[!] killed all %s processes\\n" "${SRCDIR}"
 
 printf "\\n;;; [STOPPED]\\n\\n" >> "${SRCDIR}/logs/now"
 
+printf "[.] Showing %s...\\n" "${SRCDIR}/logs/now"
+less "${SRCDIR}/logs/now"
 printf "[.] Done.\\n"
