@@ -1,118 +1,69 @@
 #!/bin/sh
-#this program is supposed to unify ./start, ./stop and ./tail but you can use them independant of this;
-if [ ! -f "$HOME/.pman/share" ]
-then
-	printf "Fatal error: %s missing. Please reinstall pman." "$SHARE/start"
-	return 1
-fi
+
 SHARE="$HOME/.pman/share"
 
 if [ "$1" = "start" ]
 then
-	#arg check
-	if [ "$2" = "" ] || [ "$3" = "" ] || [ -z "$2" ] || [ -z "$3" ]
-	then
-		printf "Invalid arguments."
-    	return 1
-    fi
     CMMD="$2"
     PNAME="$3"
     
-    #db check
-    status=$(grep "$PNAME" "$HOME/.pman/ptable.db" | sed -e "s/.*;3;//" | sed -e "s/;4;.*//")
-    if [ "$status" = "UP" ]
-    then
-    	printf "%s is already running. Stop it first." "$PNAME"
-    	exit 1
-    fi
-
 	#share run
    	if [ ! -f "$SHARE/start" ]
     then
     	printf "Fatal error: %s missing. Please reinstall pman." "$SHARE/start"
     	return 1
     fi
-#"$SHARE/./start" "$PNAME" "$CMMD"
-    STIM=$(date +%s)
-
-    #db rest
-    entry=$(grep "$SNAME" "$HOME/.pman/ptable.db")
-    if [ "$status" = "DOWN" ]
-    then
-		part=$(printf "%s" "$entry" | sed -e "s/;2;.*//")
-		newentry="${part};2;${STIM};3;UP;4;"
-		mv "$HOME/.pman/ptable.db" "$HOME/.pman/ptable.old"
-		#doing this cause gnu sed -i syntax varies from BSD version
-		sed -e "s/$entry/$newentry/" "$HOME/.pman/ptable.old" > "$HOME/.pman/ptable.db"
-	else
-		printf "%s\n" ";0;${CMMD};1;${PNAME};2;${STIM};3;UP;4;" >> "$HOME/.pman/ptable.db"
-    fi
-    
+    "$SHARE/./start" "$PNAME" "$CMMD"
     #done
     
 elif [ "$1" = "stop" ]
 then
-	#arg check
-	if [ "$2" = "" ] || [ -z "$2" ]
-	then
-		printf "Invalid arguments."
-    	return 1
-    fi
     SNAME="$2"
 
-    #db check
-    status=$(grep "$SNAME" "$HOME/.pman/ptable.db" | sed -e "s/.*;3;//" | sed -e "s/;4;.*//")
-    if [ "$status" = "DOWN" ]
-    then
-    	printf "%s is not running. Start it first." "$SNAME"
-    	exit 1
-    fi
-
-	#share run
+    #share run
    	if [ ! -f "$SHARE/stop" ]
     then
-    	printf "Fatal error: %s missing. Please reinstall pman." "$SHARE/start"
+    	printf "Fatal error: %s missing. Please reinstall pman." "$SHARE/stop"
     	return 1
     fi
-    pname=$(grep "$SNAME" "$HOME/.pman/ptable.db" | sed -e "s/.*;1;//" | sed -e "s/;2;.*//")
-    cmmd=$(grep "$SNAME" "$HOME/.pman/ptable.db" | sed -e "s/.*;0;//" | sed -e "s/;1;.*//")
-#"$SHARE/./stop" "$pname" "$cmmd"
-    STIM=$(date +%s)
-
-    #db rest
-    if [ "$status" = "UP" ]
-    then
-		part=$(grep "$SNAME" "$HOME/.pman/ptable.db" | sed -e "s/;2;.*//")
-		newentry="${part};2;${STIM};3;DOWN;4;"
-		mv "$HOME/.pman/ptable.db" "$HOME/.pman/ptable.old"
-		#doing this cause gnu sed -i syntax varies from BSD version
-		sed -e "s/$entry/$newentry/" "$HOME/.pman/ptable.old" > "$HOME/.pman/ptable.db"
-	else
-		printf "%s\n" ";0;${CMMD};1;${PNAME};2;${STIM};3;DOWN;4;" >> "$HOME/.pman/ptable.db"
-    fi
-	
+    "$SHARE/./stop" "$SNAME"
     #done
+    
 elif [ "$1" = "tail" ]
 then
-	#arg check
-	if [ "$2" = "" ] || [ -z "$2" ]
-	then
-		printf "Invalid arguments."
-    	return 1
-    fi
     SNAME="$2"
 
-	#share run
+    #share run
    	if [ ! -f "$SHARE/tail" ]
     then
     	printf "Fatal error: %s missing. Please reinstall pman." "$SHARE/tail"
     	return 1
     fi
-    pname=$(grep "$SNAME" "$HOME/.pman/ptable.db" | sed -e "s/.*;1;//" | sed -e "s/;2;.*//")
-#"$SHARE/./stop" "$pname"
-    STIM=$(date +%s)
+    "$SHARE/./tail" "$SNAME"
+    #done
+    
+elif [ "$1" = "info" ]
+then
+    SNAME="$2"
+
+    #share run
+   	if [ ! -f "$SHARE/info" ]
+    then
+    	printf "Fatal error: %s missing. Please reinstall pman." "$SHARE/info"
+    	return 1
+    fi
+    "$SHARE/./info" "$SNAME"
+    #done
+
 else
-	cat "$HOME/.pman/ptable.db"
+	#share run
+   	if [ ! -f "$SHARE/ptable" ]
+    then
+    	printf "Fatal error: %s missing. Please reinstall pman." "$SHARE/tail"
+    	return 1
+    fi
+    "$SHARE/./ptable"
+    #done
 fi
 
 
