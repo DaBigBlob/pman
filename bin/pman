@@ -59,10 +59,15 @@ then
     OK=$(curl -s "https://raw.githubusercontent.com/DaBigBlob/pman/main/OK")
     if [ "$OK" = "ok_boomer" ]
     then
+        printf "Internet OK. Downloading... " 
         curl -s "https://raw.githubusercontent.com/DaBigBlob/pman/main/share/start" > "$SHARE/start"
         curl -s "https://raw.githubusercontent.com/DaBigBlob/pman/main/share/stop" > "$SHARE/stop"
         curl -s "https://raw.githubusercontent.com/DaBigBlob/pman/main/share/tail" > "$SHARE/tail"
         curl -s "https://raw.githubusercontent.com/DaBigBlob/pman/main/share/info" > "$SHARE/info"
+        printf "Done.\n"
+    else
+        printf "No Internet."
+        return 1
     fi
     #done
 
