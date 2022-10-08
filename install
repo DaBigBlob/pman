@@ -21,6 +21,6 @@ else
 fi
 
 export PATH="$PATH:$HOME/.pman/bin"
-printf "#added my pman installer\n$PATH:%s\n" "$HOME/.pman/bin" >> "$HOME/.profile"
+printf "\n#added my pman installer\nexport $PATH:%s\n" "$HOME/.pman/bin" >> "$HOME/.profile"
 
 printf "Installed.\n"
