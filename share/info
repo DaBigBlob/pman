@@ -23,9 +23,8 @@ SNAME="$1"
 #db check
 if [ ! -f "$HOME/.pman/ptable.db" ]
 then
-	red "!.." "" "$HOME/.pman/ptable.db" " missing. Creating..."
-    mkdir -p "$HOME/.pman"
-    printf "" > "$HOME/.pman/ptable.db"
+	red "!!." "" "$HOME/.pman/ptable.db" " missing. Creating..."
+    return 1
 fi
 
 #get entries from db
