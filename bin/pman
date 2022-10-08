@@ -56,10 +56,14 @@ then
     #done
 elif [ "$1" = "update" ]
 then
-    curl -s "https://raw.githubusercontent.com/DaBigBlob/pman/main/share/start" > "$SHARE/start"
-    curl -s "https://raw.githubusercontent.com/DaBigBlob/pman/main/share/stop" > "$SHARE/stop"
-    curl -s "https://raw.githubusercontent.com/DaBigBlob/pman/main/share/tail" > "$SHARE/tail"
-    curl -s "https://raw.githubusercontent.com/DaBigBlob/pman/main/share/info" > "$SHARE/info"
+    OK=$(curl -s "https://raw.githubusercontent.com/DaBigBlob/pman/main/OK")
+    if [ "$OK" = "ok_boomer" ]
+    then
+        curl -s "https://raw.githubusercontent.com/DaBigBlob/pman/main/share/start" > "$SHARE/start"
+        curl -s "https://raw.githubusercontent.com/DaBigBlob/pman/main/share/stop" > "$SHARE/stop"
+        curl -s "https://raw.githubusercontent.com/DaBigBlob/pman/main/share/tail" > "$SHARE/tail"
+        curl -s "https://raw.githubusercontent.com/DaBigBlob/pman/main/share/info" > "$SHARE/info"
+    fi
     #done
 
 else
