@@ -1,20 +1,12 @@
 #!/bin/sh
 
-SHARE="$HOME/.pman/share"
-mkdir -p "$SHARE"
-mkdir -p "$HOME/.pman/bin"
-
 OK=$(curl -s "https://raw.githubusercontent.com/DaBigBlob/pman/main/OK")
 if [ "$OK" = "ok_boomer" ]
 then
-    printf "Internet OK. Downloading... " 
-    curl -s "https://raw.githubusercontent.com/DaBigBlob/pman/main/share/start" > "$SHARE/start"
-    curl -s "https://raw.githubusercontent.com/DaBigBlob/pman/main/share/stop" > "$SHARE/stop"
-    curl -s "https://raw.githubusercontent.com/DaBigBlob/pman/main/share/tail" > "$SHARE/tail"
-    curl -s "https://raw.githubusercontent.com/DaBigBlob/pman/main/share/info" > "$SHARE/info"
-    curl -s "https://raw.githubusercontent.com/DaBigBlob/pman/main/bin/pman" > "$HOME/.pman/bin/pman"
-    chmod +x "$SHARE/start" "$SHARE/stop" "$SHARE/tail" "$SHARE/info" "$HOME/.pman/bin/pman"
-    printf "Done.\n"
+    rm -rf "$HOME/.pman"
+    printf "Internet OK. Downloading... \n" 
+    git clone "https://github.com/DaBigBlob/pman.git" "$HOME/.pman"
+    printf "\nDone.\n"
 else
     printf "No Internet."
     return 1
