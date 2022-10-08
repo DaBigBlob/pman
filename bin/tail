@@ -1,9 +1,0 @@
-#!/bin/sh
-
-PNAME="test"
-
-mkdir -p "$HOME/.pman/$PNAME"
-LOGDIR="$HOME/.pman/$PNAME"
-
-printf "\\033[34;1m[\\033[32;1m*\\033[34;1m]\\033[0m Tailing \\033[35;1m$%s\\033[0m...\\n" "${LOGDIR}/now.log"
-tail -F "${LOGDIR}/now.log"

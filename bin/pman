@@ -1,91 +1,118 @@
 #!/bin/sh
-#this program is incomplete
-#im bored; will do latr
-#this program is supposed to unify ./start, ./stop and ./tail but you can use them independant of this; and they are completes
+#this program is supposed to unify ./start, ./stop and ./tail but you can use them independant of this;
+if [ ! -f "$HOME/.pman/share" ]
+then
+	printf "Fatal error: %s missing. Please reinstall pman." "$SHARE/start"
+	return 1
+fi
+SHARE="$HOME/.pman/share"
 
 if [ "$1" = "start" ]
 then
-
+	#arg check
 	if [ "$2" = "" ] || [ "$3" = "" ] || [ -z "$2" ] || [ -z "$3" ]
 	then
+		printf "Invalid arguments."
     	return 1
     fi
     CMMD="$2"
     PNAME="$3"
-
-    mkdir -p "$HOME/.pman/$PNAME"
-    LOGDIR="$HOME/.pman/$PNAME"
-
-    #payload
-    PMAN="
-    printf '\\n;;; [STARTING ${CMMD}]\\n\\n' >> ${LOGDIR}/now.log
-    until  ${CMMD} >>${LOGDIR}/now.log 2>&1
-    do
-        printf '\\n;;; [${CMMD} CRASHED. RESTARTING.]\\n\\n' >> ${LOGDIR}/now.log
-        sleep 1
-    done
-    "
     
-    #kill previous processes
-    pkill -9 -f "${CMMD}"
-    printf "\\033[34;1m[\\033[31;1m!\\033[34;1m]\\033[0m Killed all \\033[35;1m%s\\033[0m processes\\n" "${PNAME}"
-
-    #backup previous log
-    if [ -f "${LOGDIR}/now.log" ]
+    #db check
+    status=$(grep "$PNAME" "$HOME/.pman/ptable.db" | sed -e "s/.*;3;//" | sed -e "s/;4;.*//")
+    if [ "$status" = "UP" ]
     then
-        printf "\\n;;; [NEXT LOG START]\\n\\n" >> "${LOGDIR}/old.log"
-        cat "${LOGDIR}/now.log" >> "${LOGDIR}/old.log"
+    	printf "%s is already running. Stop it first." "$PNAME"
+    	exit 1
     fi
-    printf "" > "${LOGDIR}/now.log"
 
-    #spawn the process manager
-    sh -c "$PMAN" >/dev/null 2>&1 &
-    STIM=$(date +%s)
-    printf "\\033[34;1m[\\033[31;1m!\\033[34;1m]\\033[0m Spawned \\033[35;1m%s\\033[0m's process manager\\n" "${PNAME}"
-    printf "\\033[34;1m[\\033[32;1m*\\033[34;1m]\\033[0m Done.\\n"
-
-    #db stuff
-    entry=$(cmd "$HOME/.pman/ptable.db" | grep "$PNAME")
-    newentry="$CMMD\t$PNAME\t$STIM\tU"
-    if [ "$entry" = "" ]
+	#share run
+   	if [ ! -f "$SHARE/start" ]
     then
-        printf "%s\n" "$newentry" >> "$HOME/.pman/ptable.db"
-    else
-        sed -i "s/$entry/$newentry/" "$HOME/.pman/ptable.db"
+    	printf "Fatal error: %s missing. Please reinstall pman." "$SHARE/start"
+    	return 1
+    fi
+#"$SHARE/./start" "$PNAME" "$CMMD"
+    STIM=$(date +%s)
+
+    #db rest
+    entry=$(grep "$SNAME" "$HOME/.pman/ptable.db")
+    if [ "$status" = "DOWN" ]
+    then
+		part=$(printf "%s" "$entry" | sed -e "s/;2;.*//")
+		newentry="${part};2;${STIM};3;UP;4;"
+		mv "$HOME/.pman/ptable.db" "$HOME/.pman/ptable.old"
+		#doing this cause gnu sed -i syntax varies from BSD version
+		sed -e "s/$entry/$newentry/" "$HOME/.pman/ptable.old" > "$HOME/.pman/ptable.db"
+	else
+		printf "%s\n" ";0;${CMMD};1;${PNAME};2;${STIM};3;UP;4;" >> "$HOME/.pman/ptable.db"
     fi
     
     #done
+    
 elif [ "$1" = "stop" ]
 then
+	#arg check
 	if [ "$2" = "" ] || [ -z "$2" ]
 	then
+		printf "Invalid arguments."
     	return 1
     fi
-    PNAME="$2"
+    SNAME="$2"
 
-	STIM=$(date +%s)
-    entry=$(cmd "$HOME/.pman/ptable.db" | grep "$PNAME")
-    newentry="$CMMD\t$PNAME\t$STIM\tD"
+    #db check
+    status=$(grep "$SNAME" "$HOME/.pman/ptable.db" | sed -e "s/.*;3;//" | sed -e "s/;4;.*//")
+    if [ "$status" = "DOWN" ]
+    then
+    	printf "%s is not running. Start it first." "$SNAME"
+    	exit 1
+    fi
 
-	mkdir -p "$HOME/.pman/$PNAME"
-	LOGDIR="$HOME/.pman/$PNAME"
-	
-	pkill -9 -f "${CMMD}"
-	printf "\\033[34;1m[\\033[31;1m!\\033[34;1m]\\033[0m Killed all \\033[35;1m%s\\033[0m processes\\n" "${PNAME}"
-	
-	printf "\\n;;; [STOPPED]\\n\\n" >> "${LOGDIR}/now.log"
-	
-	printf "\\033[34;1m[\\033[32;1m*\\033[34;1m]\\033[0m Showing \\033[35;1m$%s\\033[0m...\\n" "${LOGDIR}/now.log"
-	less "${LOGDIR}/now.log"
-	printf "\\033[34;1m[\\033[32;1m*\\033[34;1m]\\033[0m Done.\\n"
+	#share run
+   	if [ ! -f "$SHARE/stop" ]
+    then
+    	printf "Fatal error: %s missing. Please reinstall pman." "$SHARE/start"
+    	return 1
+    fi
+    pname=$(grep "$SNAME" "$HOME/.pman/ptable.db" | sed -e "s/.*;1;//" | sed -e "s/;2;.*//")
+    cmmd=$(grep "$SNAME" "$HOME/.pman/ptable.db" | sed -e "s/.*;0;//" | sed -e "s/;1;.*//")
+#"$SHARE/./stop" "$pname" "$cmmd"
+    STIM=$(date +%s)
+
+    #db rest
+    if [ "$status" = "UP" ]
+    then
+		part=$(grep "$SNAME" "$HOME/.pman/ptable.db" | sed -e "s/;2;.*//")
+		newentry="${part};2;${STIM};3;DOWN;4;"
+		mv "$HOME/.pman/ptable.db" "$HOME/.pman/ptable.old"
+		#doing this cause gnu sed -i syntax varies from BSD version
+		sed -e "s/$entry/$newentry/" "$HOME/.pman/ptable.old" > "$HOME/.pman/ptable.db"
+	else
+		printf "%s\n" ";0;${CMMD};1;${PNAME};2;${STIM};3;DOWN;4;" >> "$HOME/.pman/ptable.db"
+    fi
 	
     #done
 elif [ "$1" = "tail" ]
 then
-    PNAME="$2"
+	#arg check
+	if [ "$2" = "" ] || [ -z "$2" ]
+	then
+		printf "Invalid arguments."
+    	return 1
+    fi
+    SNAME="$2"
+
+	#share run
+   	if [ ! -f "$SHARE/tail" ]
+    then
+    	printf "Fatal error: %s missing. Please reinstall pman." "$SHARE/tail"
+    	return 1
+    fi
+    pname=$(grep "$SNAME" "$HOME/.pman/ptable.db" | sed -e "s/.*;1;//" | sed -e "s/;2;.*//")
+#"$SHARE/./stop" "$pname"
+    STIM=$(date +%s)
 else
-	sleep 1
-    #print process table
+	cat "$HOME/.pman/ptable.db"
 fi
 
 
