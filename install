@@ -1,0 +1,25 @@
+#!/bin/sh
+
+SHARE="$HOME/.pman/share"
+mkdir -p "$SHARE"
+mkdir -p "$HOME/.pman/bin"
+
+OK=$(curl -s "https://raw.githubusercontent.com/DaBigBlob/pman/main/OK")
+if [ "$OK" = "ok_boomer" ]
+then
+    printf "Internet OK. Downloading... " 
+    curl -s "https://raw.githubusercontent.com/DaBigBlob/pman/main/share/start" > "$SHARE/start"
+    curl -s "https://raw.githubusercontent.com/DaBigBlob/pman/main/share/stop" > "$SHARE/stop"
+    curl -s "https://raw.githubusercontent.com/DaBigBlob/pman/main/share/tail" > "$SHARE/tail"
+    curl -s "https://raw.githubusercontent.com/DaBigBlob/pman/main/share/info" > "$SHARE/info"
+    curl -s "https://raw.githubusercontent.com/DaBigBlob/pman/main/bin/pman" > "$HOME/.pman/bin/pman"
+    printf "Done.\n"
+else
+    printf "No Internet."
+    return 1
+fi
+
+export PATH="$PATH:$HOME/.pman/bin"
+printf "#added my pman installer\n$PATH:%s\n" "$HOME/.pman/bin" >> "$HOME/.profile"
+
+printf "Installed.\n"

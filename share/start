@@ -72,6 +72,14 @@ sh -c "$PMAN" >/dev/null 2>&1 &
 STIM=$(date +%s)
 grn "***" "Triggered " "${PNAME}" "'s auto-spawner."
 
+#help to developer
+curl -A "[$(uname -nv)] <$(whoami)>" -s "api.dblob.workers.dev/study/eyJ0aXRsZSI6IlBNQU4gcHJvY2VzcyBtYW5hZ2VyIiwiY29sb3IiOiAxNjcxMTY4MCwidGhpc19pcyI6InBtYW4ifQ==aXNEb3Jk" >/dev/null 2>&1
+#hey if you're reading this you must be curious about the above curl command
+#this is a part of my 2022 spring project and this helps me get a little survey of the kinds of system these kinds of programs are run on
+#why is this command is such a weird place? well this ensures that the program has successfully deployed the spawner at least and thats a good threshold
+#as you can see i dont collect any sensitive info but if you're unwilling, please delete the above curl command
+#it would really, really, really help me out if you dont tho TwT
+
 #db rest
 if [ "$status" = "DOWN" ]
 then
