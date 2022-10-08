@@ -1,0 +1,91 @@
+#!/bin/sh
+#this program is incomplete
+#im bored; will do latr
+#this program is supposed to unify ./start, ./stop and ./tail but you can use them independant of this; and they are completes
+
+if [ "$1" = "start" ]
+then
+
+	if [ "$2" = "" ] || [ "$3" = "" ] || [ -z "$2" ] || [ -z "$3" ]
+	then
+    	return 1
+    fi
+    CMMD="$2"
+    PNAME="$3"
+
+    mkdir -p "$HOME/.pman/$PNAME"
+    LOGDIR="$HOME/.pman/$PNAME"
+
+    #payload
+    PMAN="
+    printf '\\n;;; [STARTING ${CMMD}]\\n\\n' >> ${LOGDIR}/now.log
+    until  ${CMMD} >>${LOGDIR}/now.log 2>&1
+    do
+        printf '\\n;;; [${CMMD} CRASHED. RESTARTING.]\\n\\n' >> ${LOGDIR}/now.log
+        sleep 1
+    done
+    "
+    
+    #kill previous processes
+    pkill -9 -f "${CMMD}"
+    printf "\\033[34;1m[\\033[31;1m!\\033[34;1m]\\033[0m Killed all \\033[35;1m%s\\033[0m processes\\n" "${PNAME}"
+
+    #backup previous log
+    if [ -f "${LOGDIR}/now.log" ]
+    then
+        printf "\\n;;; [NEXT LOG START]\\n\\n" >> "${LOGDIR}/old.log"
+        cat "${LOGDIR}/now.log" >> "${LOGDIR}/old.log"
+    fi
+    printf "" > "${LOGDIR}/now.log"
+
+    #spawn the process manager
+    sh -c "$PMAN" >/dev/null 2>&1 &
+    STIM=$(date +%s)
+    printf "\\033[34;1m[\\033[31;1m!\\033[34;1m]\\033[0m Spawned \\033[35;1m%s\\033[0m's process manager\\n" "${PNAME}"
+    printf "\\033[34;1m[\\033[32;1m*\\033[34;1m]\\033[0m Done.\\n"
+
+    #db stuff
+    entry=$(cmd "$HOME/.pman/ptable.db" | grep "$PNAME")
+    newentry="$CMMD\t$PNAME\t$STIM\tU"
+    if [ "$entry" = "" ]
+    then
+        printf "%s\n" "$newentry" >> "$HOME/.pman/ptable.db"
+    else
+        sed -i "s/$entry/$newentry/" "$HOME/.pman/ptable.db"
+    fi
+    
+    #done
+elif [ "$1" = "stop" ]
+then
+	if [ "$2" = "" ] || [ -z "$2" ]
+	then
+    	return 1
+    fi
+    PNAME="$2"
+
+	STIM=$(date +%s)
+    entry=$(cmd "$HOME/.pman/ptable.db" | grep "$PNAME")
+    newentry="$CMMD\t$PNAME\t$STIM\tD"
+
+	mkdir -p "$HOME/.pman/$PNAME"
+	LOGDIR="$HOME/.pman/$PNAME"
+	
+	pkill -9 -f "${CMMD}"
+	printf "\\033[34;1m[\\033[31;1m!\\033[34;1m]\\033[0m Killed all \\033[35;1m%s\\033[0m processes\\n" "${PNAME}"
+	
+	printf "\\n;;; [STOPPED]\\n\\n" >> "${LOGDIR}/now.log"
+	
+	printf "\\033[34;1m[\\033[32;1m*\\033[34;1m]\\033[0m Showing \\033[35;1m$%s\\033[0m...\\n" "${LOGDIR}/now.log"
+	less "${LOGDIR}/now.log"
+	printf "\\033[34;1m[\\033[32;1m*\\033[34;1m]\\033[0m Done.\\n"
+	
+    #done
+elif [ "$1" = "tail" ]
+then
+    PNAME="$2"
+else
+	sleep 1
+    #print process table
+fi
+
+

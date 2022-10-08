@@ -7,7 +7,6 @@ mkdir -p "$HOME/.pman/$PNAME"
 LOGDIR="$HOME/.pman/$PNAME"
 
 PMAN="
-#this_will_be_killed_by_pman
 printf '\\n;;; [STARTING ${CMMD}]\\n\\n' >> ${LOGDIR}/now.log
 until  ${CMMD} >>${LOGDIR}/now.log 2>&1
 do
@@ -16,7 +15,6 @@ do
 done
 "
 
-pkill -9 -f "#this_will_be_killed_by_pman"
 pkill -9 -f "${CMMD}"
 printf "\\033[34;1m[\\033[31;1m!\\033[34;1m]\\033[0m Killed all \\033[35;1m%s\\033[0m processes\\n" "${PNAME}"
 
