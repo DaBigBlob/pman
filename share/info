@@ -1,0 +1,48 @@
+#!/bin/sh
+
+NTIM=$(date +%s)
+
+red() {
+    printf "\\033[34;1m[\\033[31;1m%s\\033[34;1m]\\033[0m %s\\033[35;1m%s\\033[0m%s\\n" "$1" "$2" "$3" "$4"
+}
+grn() {
+    printf "\\033[34;1m[\\033[32;1m%s\\033[34;1m]\\033[0m %s\\033[35;1m%s\\033[0m%s\\n" "$1" "$2" "$3" "$4" 
+}
+pmp() {
+    printf "\\033[34;1m%s\\033[30;1m%s\\033[35;1m]%s\\033[0m\\n" "$1" "$2" "$3"
+}
+
+#arg check
+if [ "$1" = "" ] || [ -z "$1" ]
+then
+    red "!!!" "Invalid arguments." "" "Exit."
+    return 1
+fi
+SNAME="$1"
+
+#db check
+if [ ! -f "$HOME/.pman/ptable.db" ]
+then
+	red "!.." "" "$HOME/.pman/ptable.db" " missing. Creating..."
+    mkdir -p "$HOME/.pman"
+    printf "" > "$HOME/.pman/ptable.db"
+fi
+
+#get entries from db
+CMMD=$(grep "$SNAME" "$HOME/.pman/ptable.db" | sed -e "s/.*;0;//" | sed -e "s/;1;.*//")
+PNAME=$(grep "$SNAME" "$HOME/.pman/ptable.db" | sed -e "s/.*;1;//" | sed -e "s/;2;.*//")
+STIM=$(grep "$SNAME" "$HOME/.pman/ptable.db" | sed -e "s/.*;2;//" | sed -e "s/;3;.*//")
+STATUS=$(grep "$SNAME" "$HOME/.pman/ptable.db" | sed -e "s/.*;3;//" | sed -e "s/;4;.*//")
+
+DTIM=$((NTIM-STIM+3))
+dys=$((t/60/60/24))
+hrs=$((t/60/60%24))
+min=$((t/60%60))
+sec=$((t%60))
+
+printf "\n\n"
+
+pmp "Process Name:" "..." "$PNAME"
+pmp "Command:" "........" "$CMMD"
+pmp "Uptime:" "........." "$dys days, $hrs hours, $min minutes, $sec seconds"
+pmp "Status:" "........." "$STATUS"

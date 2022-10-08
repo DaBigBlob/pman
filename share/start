@@ -1,0 +1,93 @@
+#!/bin/sh
+
+red() {
+    printf "\\033[34;1m[\\033[31;1m%s\\033[34;1m]\\033[0m %s\\033[35;1m%s\\033[0m%s\\n" "$1" "$2" "$3" "$4"
+}
+grn() {
+   printf "\\033[34;1m[\\033[32;1m%s\\033[34;1m]\\033[0m %s\\033[35;1m%s\\033[0m%s\\n" "$1" "$2" "$3" "$4" 
+}
+gry() {
+   printf "\\033[34;1m[\\033[30;1m%s\\033[34;1m]\\033[0m %s\\033[35;1m%s\\033[0m%s\\n" "$1" "$2" "$3" "$4" 
+}
+
+#arg check
+if [ "$1" = "" ] || [ "$2" = "" ] || [ -z "$1" ] || [ -z "$2" ]
+then
+    red "!!!" "Invalid arguments." "" "Exit."
+    return 1
+fi
+CMMD="$2"
+PNAME="$1"
+
+#db check
+if [ ! -f "$HOME/.pman/ptable.db" ]
+then
+	red "!.." "" "$HOME/.pman/ptable.db" " missing. Creating..."
+    mkdir -p "$HOME/.pman"
+    printf "" > "$HOME/.pman/ptable.db"
+fi
+
+#log check
+LOGDIR="$HOME/.pman/logs/$PNAME"
+if [ ! -f "${LOGDIR}/now.log" ]
+then
+	red "..." "" "${LOGDIR}/now.log" " missing." ""
+    mkdir -p "${LOGDIR}"
+    gry "..." "Generating new log..."
+    printf "" > "${LOGDIR}/now.log"
+fi
+
+#entry check
+status=$(grep "$PNAME" "$HOME/.pman/ptable.db" | sed -e "s/.*;3;//" | sed -e "s/;4;.*//")
+if [ "$status" = "UP" ]
+then
+    red "!!." "" "$PNAME" " is already running."
+    gry "..." "Killing its processes..." "" ""
+    pkill -9 -f "${CMMD}"
+    printf "\\n;;; [%s KILLED BY START SCRIPT.]\\n\\n" "$CMMD" >> ${LOGDIR}/now.log
+    grn "*.." "Killed all of " "${PNAME}" "'s processes."
+fi
+
+#payload
+PMAN="
+printf '\\n;;; [STARTING ${CMMD}]\\n\\n' >> ${LOGDIR}/now.log
+until  ${CMMD} >>${LOGDIR}/now.log 2>&1
+do
+    printf '\\n;;; [${CMMD} CRASHED. RESTARTING.]\\n\\n' >> ${LOGDIR}/now.log
+    sleep 1
+done
+"
+
+#log backup
+if [ ! -s "${LOGDIR}/now.log" ]
+then
+    gry "***" "Backing up old logs. They stay available at " "${LOGDIR}/old.log" " forever."
+    printf "\\n;;; [NEXT LOG START]\\n\\n" >> "${LOGDIR}/old.log"
+    cat "${LOGDIR}/now.log" >> "${LOGDIR}/old.log"
+fi
+
+#mk auto-spawner
+gry "***" "Setting up auto-spawner..." "" ""
+sh -c "$PMAN" >/dev/null 2>&1 &
+STIM=$(date +%s)
+grn "***" "Triggered " "${PNAME}" "'s auto-spawner."
+
+#db rest
+if [ "$status" = "DOWN" ]
+then
+    gry "..." "Updating " "$HOME/.pman/ptable.db" "..."
+    part=$(grep "$SNAME" "$HOME/.pman/ptable.db" | sed -e "s/;2;.*//")
+    newentry="${part};2;${STIM};3;UP;4;"
+    mv "$HOME/.pman/ptable.db" "$HOME/.pman/ptable.old"
+    #doing this cause gnu sed -i syntax varies from BSD version
+    sed -e "s/$entry/$newentry/" "$HOME/.pman/ptable.old" > "$HOME/.pman/ptable.db"
+    grn "**." "Process DB updated."
+else
+    gry "..." "Creating new DB entry at" "$HOME/.pman/ptable.db" "..."
+    printf "%s\n" ";0;${CMMD};1;${PNAME};2;${STIM};3;UP;4;" >> "$HOME/.pman/ptable.db"
+    grn "**." "Process entry created."
+fi
+
+
+grn "..." "Done. Bye. o/"
+
