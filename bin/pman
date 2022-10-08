@@ -64,7 +64,7 @@ then
         curl -s "https://raw.githubusercontent.com/DaBigBlob/pman/main/share/stop" > "$SHARE/stop"
         curl -s "https://raw.githubusercontent.com/DaBigBlob/pman/main/share/tail" > "$SHARE/tail"
         curl -s "https://raw.githubusercontent.com/DaBigBlob/pman/main/share/info" > "$SHARE/info"
-        chmod -x "$SHARE/start" "$SHARE/stop" "$SHARE/tail" "$SHARE/info"
+        chmod +x "$SHARE/start" "$SHARE/stop" "$SHARE/tail" "$SHARE/info"
         printf "Done.\n"
     else
         printf "No Internet."
