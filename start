@@ -1,18 +1,33 @@
 #!/bin/sh
 
-SRCDIR="/Users/hriddhiman/Code/shell-man/test"
+CMMD="sh test_src"
+PNAME="test"
 
-mkdir -p "${SRCDIR}/logs"
+mkdir -p "$HOME/.pman/$PNAME"
+LOGDIR="$HOME/.pman/$PNAME"
 
-pkill -9 -f "${SRCDIR}"
-printf "[!] Killed all %s processes\\n" "${SRCDIR}"
+PMAN="
+#this_will_be_killed_by_pman
+printf '\\n;;; [STARTING ${CMMD}]\\n\\n' >> ${LOGDIR}/now.log
+until  ${CMMD} >>${LOGDIR}/now.log 2>&1
+do
+    printf '\\n;;; [${CMMD} CRASHED. RESTARTING.]\\n\\n' >> ${LOGDIR}/now.log
+    sleep 1
+done
+"
 
-printf "\\n;;; [NEXT LOG START]\\n\\n" >> "${SRCDIR}/logs/old"
-cat "${SRCDIR}/logs/now" >> "${SRCDIR}/logs/old"
-printf "" > "${SRCDIR}/logs/now"
+pkill -9 -f "#this_will_be_killed_by_pman"
+pkill -9 -f "${CMMD}"
+printf "\\033[34;1m[\\033[31;1m!\\033[34;1m]\\033[0m Killed all \\033[35;1m%s\\033[0m processes\\n" "${CMMD}"
 
-"${SRCDIR}/./pman" "$SRCDIR" >/dev/null 2>&1 &
-printf "[!] Triggered %s's process manager\\n" "${SRCDIR}"
+if [ -f "${LOGDIR}/now.log" ]
+then
+    printf "\\n;;; [NEXT LOG START]\\n\\n" >> "${LOGDIR}/old.log"
+    cat "${LOGDIR}/now.log" >> "${LOGDIR}/old.log"
+fi
+printf "" > "${LOGDIR}/now.log"
 
-printf "\\n[.] Tailing %s...\\n<ctrl+c to exit but keep %s running>\\n" "${SRCDIR}/logs/now" "${SRCDIR}"
-tail -f "${SRCDIR}/logs/now"
+sh -c "$PMAN" >/dev/null 2>&1 &
+printf "\\033[34;1m[\\033[31;1m!\\033[34;1m]\\033[0m Triggered \\033[35;1m%s\\033[0m's process manager\\n" "${CMMD}"
+printf "\\033[34;1m[\\033[32;1m*\\033[34;1m]\\033[0m Done.\\n"
+
