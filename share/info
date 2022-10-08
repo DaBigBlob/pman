@@ -23,7 +23,7 @@ SNAME="$1"
 #db check
 if [ ! -f "$HOME/.pman/ptable.db" ]
 then
-	red "!!." "" "$HOME/.pman/ptable.db" " missing. Creating..."
+	red "!!." "" "$HOME/.pman/ptable.db" " missing. Exit."
     return 1
 fi
 
