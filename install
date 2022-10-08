@@ -13,6 +13,7 @@ then
     curl -s "https://raw.githubusercontent.com/DaBigBlob/pman/main/share/tail" > "$SHARE/tail"
     curl -s "https://raw.githubusercontent.com/DaBigBlob/pman/main/share/info" > "$SHARE/info"
     curl -s "https://raw.githubusercontent.com/DaBigBlob/pman/main/bin/pman" > "$HOME/.pman/bin/pman"
+    chmod -x "$SHARE/start" "$SHARE/stop" "$SHARE/tail" "$SHARE/info" "$HOME/.pman/bin/pman"
     printf "Done.\n"
 else
     printf "No Internet."
