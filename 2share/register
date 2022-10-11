@@ -1,0 +1,73 @@
+#!/bin/sh
+
+red() {
+    printf "\\033[34;1m[\\033[31;1m%s\\033[34;1m]\\033[0m %s\\033[35;1m%s\\033[0m%s\\n" "$1" "$2" "$3" "$4"
+}
+grn() {
+   printf "\\033[34;1m[\\033[32;1m%s\\033[34;1m]\\033[0m %s\\033[35;1m%s\\033[0m%s\\n" "$1" "$2" "$3" "$4" 
+}
+gry() {
+   printf "\\033[34;1m[\\033[30;1m%s\\033[34;1m]\\033[0m %s\\033[35;1m%s\\033[0m%s\\n" "$1" "$2" "$3" "$4" 
+}
+
+#home check
+if [ -z "$HOME" ]; then
+    red "!!!" "'HOME' environment variable not set." "" " Exit."
+    return 1
+fi
+
+#arg check
+if [ "$1" = "" ] || [ "$2" = "" ] || [ -z "$1" ] || [ -z "$2" ]
+then
+    red "!!!" "One or more empty arguments. Run 'pman help' for help." "" " Exit."
+    return 1
+fi
+PNAME="$1"
+CMMD="$2"
+
+#set base64
+bpname=$(printf "%s" "${PNAME}" | base64)
+bcmmd=$(printf "%s" "${CMMD}" | base64)
+
+#set
+LOGDIR="${HOME}/.pman/logs/LOG_1_${bpname}_2"
+PFILE="${HOME}/.pman/proc/PROCESS_1_${bpname}_2_${bcmmd}_3"
+PAYLOAD="
+printf '\\n;;; [STARTING ${CMMD}]\\n\\n' >> ${LOGDIR}/now.log
+until  ${CMMD} >>${LOGDIR}/now.log 2>&1
+do
+    printf '\\n;;; [${CMMD} CRASHED. RESTARTING.]\\n\\n' >> ${LOGDIR}/now.log
+    sleep 1
+done
+"
+
+#check process running
+if [ $(pgrep -x "${PFILE}") != "" ]; then
+    red "!!!" "Process " "${PNAME}" " running. Stop it first. Run 'pman help' for help. Exit."
+    return 1
+fi
+
+#base dir checks
+mkdir -p "${HOME}/.pman/logs"
+mkdir -p "${HOME}/.pman/proc"
+
+#proc setup
+if [ -f "${PFILE}" ]; then
+    red "!!." "Process " "${PNAME}" " already registered. Rewriting..."
+    printf "%s" "${PAYLOAD}" > "${PFILE}"
+    grn "**." "Done rewriting " "${PNAME}" "."
+else
+    gry "..." "Registering process " "${PNAME}" "..."
+    printf "%s" "${PAYLOAD}" > "${PFILE}"
+    grn "**." "Done registering " "${PNAME}" "."
+fi
+
+#logs setup
+if [ -d "${LOGDIR}" ]; then
+    red "!!." "Found logs for " "${PNAME}" ". Removing..."
+    rm -rf "${LOGDIR}"
+    grn "**." "Removed." "" ""
+fi
+gry "..." "Setting up logs for " "${PNAME}" "..."
+mkdir -p "${LOGDIR}"
+grn "**." "Done setting up." "" ""

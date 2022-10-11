@@ -1,0 +1,64 @@
+#!/bin/sh
+
+red() {
+    printf "\\033[34;1m[\\033[31;1m%s\\033[34;1m]\\033[0m %s\\033[35;1m%s\\033[0m%s\\n" "$1" "$2" "$3" "$4"
+}
+grn() {
+   printf "\\033[34;1m[\\033[32;1m%s\\033[34;1m]\\033[0m %s\\033[35;1m%s\\033[0m%s\\n" "$1" "$2" "$3" "$4" 
+}
+gry() {
+   printf "\\033[34;1m[\\033[30;1m%s\\033[34;1m]\\033[0m %s\\033[35;1m%s\\033[0m%s\\n" "$1" "$2" "$3" "$4" 
+}
+
+#home check
+if [ -z "$HOME" ]; then
+    red "!!!" "'HOME' environment variable not set." "" " Exit."
+    return 1
+fi
+
+#arg check
+if [ "$1" = "" ] || [ -z "$1" ]; then
+    red "!!!" "Process name not provided. Run 'pman help' for help." "" " Exit."
+    return 1
+fi
+PNAME="$1"
+bpname=$(printf "%s" "${PNAME}" | base64)
+
+#base dir proc
+if [ ! -d "${HOME}/.pman/proc" ]; then
+    red "!!!" "No process registered. Run 'pman help' for help." "" " Exit."
+    return 1
+fi
+
+#set
+LOGDIR="${HOME}/.pman/logs/LOG_1_${bpname}_2"
+PFILE=$(ls "${HOME}/.pman/proc" | grep "${bpname}")
+
+#check proccess exists
+if [ "${PFILE}" = "" ]||[ ! -f "${PFILE}" ]; then
+    red "!!." "Process " "${PNAME}" " not registered. Register fist. Run 'pman help' for help. Exit."
+    return 1
+fi
+
+#check logs exist
+if [ ! -d "${LOGDIR}" ]; then
+    red "!.." "Logs for " "${PNAME}" " not set up."
+    gry "..." "Setting up logs for " "${PNAME}" "..."
+    mkdir -p "${LOGDIR}"
+    grn "**." "Done setting up logs." "" ""
+fi
+
+#check process running
+if [ $(pgrep -x "${PFILE}") != "" ]; then
+    red "!!!" "Process " "${PNAME}" " already running. Stopping it..."
+    if [ ! -f "${HOME}/.pman/share/stop" ]; then
+        red "!!!" "Script " "${HOME}/.pman/share/stop" " not found. Exit."
+        return 1
+    fi
+    "${HOME}/.pman/share/./stop" "${PNAME}"
+fi
+
+#start the thing
+gry "..." "Launching auto spawner for " "${PNAME}" "..."
+sh "${PFILE}" >/dev/null 2>&1 &
+grn "***" "Launched."

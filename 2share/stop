@@ -1,0 +1,109 @@
+#!/bin/sh
+
+red() {
+    printf "\\033[34;1m[\\033[31;1m%s\\033[34;1m]\\033[0m %s\\033[35;1m%s\\033[0m%s\\n" "$1" "$2" "$3" "$4"
+}
+grn() {
+    printf "\\033[34;1m[\\033[32;1m%s\\033[34;1m]\\033[0m %s\\033[35;1m%s\\033[0m%s\\n" "$1" "$2" "$3" "$4" 
+}
+gry() {
+    printf "\\033[34;1m[\\033[30;1m%s\\033[34;1m]\\033[0m %s\\033[35;1m%s\\033[0m%s\\n" "$1" "$2" "$3" "$4" 
+}
+
+#home check
+if [ -z "$HOME" ]; then
+    red "!!!" "'HOME' environment variable not set." "" " Exit."
+    return 1
+fi
+
+#arg check
+if [ "$1" = "" ] || [ -z "$1" ]; then
+    red "!!!" "Process name not provided. Run 'pman help' for help." "" " Exit."
+    return 1
+fi
+PNAME="$1"
+bpname=$(printf "%s" "${PNAME}" | base64)
+
+#base dir proc
+if [ ! -d "${HOME}/.pman/proc" ]; then
+    red "!!!" "No process registered. Run 'pman help' for help." "" " Exit."
+    return 1
+fi
+
+#set
+LOGDIR="${HOME}/.pman/logs/LOG_1_${bpname}_2"
+PFILE=$(ls "${HOME}/.pman/proc" | grep "${bpname}")
+
+#check proccess exists
+if [ "${PFILE}" = "" ]||[ ! -f "${PFILE}" ]; then
+    red "!!." "Process " "${PNAME}" " not registered. Register fist. Run 'pman help' for help. Exit."
+    return 1
+fi
+
+#check logs exist
+if [ ! -d "${LOGDIR}" ]; then
+    red "!.." "Logs for " "${PNAME}" " not set up."
+    gry "..." "Setting up logs for " "${PNAME}" "..."
+    mkdir -p "${LOGDIR}"
+    grn "**." "Done setting up logs." "" ""
+fi
+
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+#db check
+if [ ! -f "$HOME/.pman/ptable.db" ]
+then
+	red "!.." "" "$HOME/.pman/ptable.db" " missing. Creating..."
+    mkdir -p "$HOME/.pman"
+    printf "" > "$HOME/.pman/ptable.db"
+fi
+
+#get entries from db
+PNAME=$(grep "$SNAME" "$HOME/.pman/ptable.db" | sed -e "s/.*;1;//" | sed -e "s/;2;.*//")
+CMMD=$(grep "$SNAME" "$HOME/.pman/ptable.db" | sed -e "s/.*;0;//" | sed -e "s/;1;.*//")
+
+#log check
+LOGDIR="$HOME/.pman/logs/$PNAME"
+if [ ! -f "${LOGDIR}/now.log" ]
+then
+	red "..." "" "${LOGDIR}/now.log" " missing." ""
+    mkdir -p "${LOGDIR}"
+    gry "..." "Generating new log..."
+    printf "" > "${LOGDIR}/now.log"
+fi
+
+#entry check && kill
+status=$(grep "$PNAME" "$HOME/.pman/ptable.db" | sed -e "s/.*;3;//" | sed -e "s/;4;.*//")
+if [ "$status" = "UP" ]
+then
+    #kill
+    gry "**." "Killing " "$PNAME" "'s processes..."
+    pkill -9 -f "${CMMD}"
+    STIM=$(date +%s)
+    grn "*.." "Killed all of " "${PNAME}" "'s processes."
+    printf "\\n;;; [%s STOPPED.]\\n\\n" "$CMMD" >> ${LOGDIR}/now.log
+
+    #db update
+    gry "..." "Updating " "$HOME/.pman/ptable.db" "..."
+    part=$(grep "$SNAME" "$HOME/.pman/ptable.db" | sed -e "s/;2;.*//")
+    newentry="${part};2;${STIM};3;DOWN;4;"
+    mv "$HOME/.pman/ptable.db" "$HOME/.pman/ptable.old"
+    #doing this cause gnu sed -i syntax varies from BSD version
+    sed -e "s/$entry/$newentry/" "$HOME/.pman/ptable.old" > "$HOME/.pman/ptable.db"
+    grn "**." "Process DB updated."
+else
+    #kill
+    red "!!." "" "$PNAME" " is not running."
+    gry "..." "Trying to kill its processes anyway..." "" ""
+    pkill -9 -f "${CMMD}"
+    STIM=$(date +%s)
+    grn "*.." "Killed all of " "${PNAME}" "'s processes."
+    printf "\\n;;; [%s STOPPED.]\\n\\n" "$CMMD" >> ${LOGDIR}/now.log
+
+    #db update
+    gry "..." "Creating new DB entry at" "$HOME/.pman/ptable.db" "..."
+    printf "%s\n" ";0;${CMMD};1;${PNAME};2;${STIM};3;DOWN;4;" >> "$HOME/.pman/ptable.db"
+    grn "**." "Process entry created."
+fi
+
+grn "..." "Done. Bye. o/"

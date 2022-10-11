@@ -1,0 +1,41 @@
+~/.pman
+    \
+     |
+     |--share/
+     |      \
+     |       |
+     |       |--start
+     |       |--stop
+     |       |--register
+     |       |--tail
+     |       |--status
+     |       |--ptable
+     |       |--help
+     |       |--delete
+     |
+     |--bin/
+     |      \
+     |       ./pman
+     |
+     |--logs/
+     |--proc/
+
+
+
+proc UUID: PROCESS_1_base64[<PNAME>]_2_base64[<CMMD>]_3
+logs UUID: LOG_1_base64[<PNAME>]_2
+
+args:
+    register <-- <PNAME> <CMMD>
+    start    <-- <PNAME>
+    stop     <-- <PNAME>
+    tail     <-- <PNAME>
+    status   <-- <PNAME>
+    delete   <-- <PNAME>
+
+unique: <PNAME> && <PNAME> --> <CMMD> && <CMMD>
+
+includes:
+    PROCESS_1_base64[<PNAME>]_2_base64[<CMMD>]_3:
+       #STATUS_1_<UP/DOWN>_2
+       <spawner SRC>
